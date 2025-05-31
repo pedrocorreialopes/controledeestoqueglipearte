@@ -74,7 +74,7 @@ document.getElementById("product-form").addEventListener("submit", function (e) 
     produtos[editandoIndex] = novoProduto;
     editandoIndex = null;
   } else {
-    produtos.push(novoNovoProduto);
+    produtos.push(novoProduto);
   }
 
   atualizarLocalStorage();
@@ -90,43 +90,31 @@ function imprimirPDF() {
   window.print();
 }
 
-function exportarExcel() {
+function exportarCSV() {
   if (produtos.length === 0) {
     alert("Nenhum produto cadastrado para exportar.");
     return;
   }
 
-  // Preparar os dados para o SheetJS
-  const dadosParaExcel = [
-    ["Produto", "Fornecedor", "Valor Unitário", "Quantidade", "Total Investido"]
-  ];
+  let csv = "Produto,Fornecedor,Valor Unitário,Quantidade,Total Investido\n";
+  let total = 0;
 
-  let totalGeral = 0;
   produtos.forEach(p => {
     const totalProduto = p.valor * p.quantidade;
-    totalGeral += totalProduto;
-    dadosParaExcel.push([
-      p.nome,
-      p.fornecedor,
-      p.valor.toFixed(2),
-      p.quantidade,
-      totalProduto.toFixed(2)
-    ]);
+    total += totalProduto;
+    csv += `${p.nome},${p.fornecedor},${p.valor.toFixed(2)},${p.quantidade},${totalProduto.toFixed(2)}\n`;
   });
 
-  // Adicionar linha de total geral
-  dadosParaExcel.push([]); // Linha em branco
-  dadosParaExcel.push(["", "", "", "Total Geral", totalGeral.toFixed(2)]);
+  csv += `,,,,\n,,,,Total Geral,R$ ${total.toFixed(2)}\n`;
 
-  // Criar uma nova planilha
-  const ws = XLSX.utils.aoa_to_sheet(dadosParaExcel);
-
-  // Criar um novo livro de trabalho
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Estoque Glipearte");
-
-  // Escrever e baixar o arquivo Excel
-  XLSX.writeFile(wb, "estoque_glipearte.xlsx");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "estoque_glipearte.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 // Inicializar tabela ao carregar
